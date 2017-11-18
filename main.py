@@ -1,14 +1,16 @@
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
 from sklearn.cluster import KMeans
-import sklearn
+from sklearn.svm import SVC
 import numpy as np
+import sklearn
 import math
 
-num_features = 0
-unused_features = {0,1,2,3,4,5,6,12,13,14,15}
+num_features, num_samples = 0, 0
+num_classes = 2
+
+unused_features = {0, 1, 2, 3, 4, 5, 6, 12, 13, 14, 15}
 
 features = np.array([]) # Feature Names
 data = [[]]     # Feature Data
@@ -16,6 +18,7 @@ label = np.array([])    # Labels    ->  0: Net Loss     1: Net Gain
 stock_symbols = set()
 
 X = np.array([[]])
+
 
 with open("./Resources/dow_jones_index.data") as file:
 
@@ -65,29 +68,6 @@ with open("./Resources/dow_jones_index.data") as file:
                 data[i][current_feature_number] = feature_value.strip('$')
 
             current_feature_number = current_feature_number + 1
-    
-
-    # num_features = num_features - 1
-
-    # # Group by stock symbol so we can impute
-    # # Remove stock symbol
-    # # Impute so we don't have NaN
-    # all_subsets = []
-    # imp = sklearn.preprocessing.Imputer(missing_values="NaN", strategy="mean", axis=0)
-    # for curr_sym in stock_symbols:
-    #     data_subset = list(filter(lambda x: x[0] == curr_sym, data))
-    #     data_subset = np.array(list(map(lambda x: x[1:], data_subset)))
-    #     data_subset = imp.fit_transform(data_subset)
-    #     # all_subsets.append(data_subset)
-    #     for subset in data_subset:
-    #         all_subsets.append(subset)
-
-    # X = np.array([all_subsets[0]])
-    # for i, subset in enumerate(all_subsets):
-    #     if i == 0:
-    #         continue
-    #     X = np.append(X, [subset], axis=0)
-    # # print(X)
 
     positive_count = 0
     negative_count = 0
@@ -100,8 +80,8 @@ with open("./Resources/dow_jones_index.data") as file:
             label[i] = 0
             negative_count = negative_count + 1
     
-    print("Positive count: {}".format(positive_count))
-    print("Negative count: {}".format(negative_count))
+    print("Positive samples: {}".format(positive_count))
+    print("Negative samples: {}".format(negative_count))
 
 
 
@@ -110,81 +90,126 @@ X = imp.fit_transform(data)
 X = sklearn.preprocessing.normalize(X, norm='l2', axis=0)
 
 
-''' Splits  '''
-score = 0
-tests = 750
 matrix_total=[[0,0],[0,0]]
-# for i in range(tests):
-
-loo = sklearn.model_selection.LeaveOneOut()
-# loo.get_n_splits(X)
-# for train_index, test_index in loo.split(X):
-#     # X_train, X_test, y_train, y_test = train_test_split(X, label, test_size = 1)
-#     X_train, X_test = X[train_index], X[test_index]
-#     y_train, y_test = label[train_index], label[test_index]
-#     clf = GaussianNB()
-#     clf.fit(X_train, y_train)
-#     prediction = clf.predict(X_test)
-#     CF_Matrix = sklearn.metrics.confusion_matrix(y_test, prediction)
-#     for i in range(len(CF_Matrix)):
-#         for j in range(len(CF_Matrix[i])):
-#             matrix_total[i][j] = matrix_total[i][j] + CF_Matrix[i][j]
-#     score += clf.score(X_test, y_test)
 
 
-# print(matrix_total[0])
-# print(matrix_total[1])
+def main():
+    '''  Evaluates Gaussian Naive Bayes, KNN, SVC, and KMeans classifiers  '''
 
-# score /= (tests)
+    gnb_score, knn_score, svc_score, kmeans_score = 0, 0, 0, 0
+    num_tests = 100
+    t_size = 1
 
-# print("Accuracy: {}".format(score))
-# print("True Negative Rate: {}".format(matrix_total[0][0]/(matrix_total[0][0] + matrix_total[1][0])))
+    X_train, X_test, y_train, y_test = \
+        train_test_split(X, label, test_size=t_size)
+
+    print(gnb(X_train, y_train, X_test, y_test))
+    print(knn(X_train, y_train, X_test, y_test))
+    print(svm(X_train, y_train, X_test, y_test))
 
 
-print("\n\nKNN")
+def gnb(X_train, y_train, X_test, y_test):
+    ''' Runs Guassian Naive Bayes
+    Input: X, y, test_size
+    Return: score, confusion_matrix
+    '''
 
-# # TODO-- Sweep accros n = 5 => sqrt(n=750)
-# loo.get_n_splits(X)
-# score = 0
-# for train_index, test_index in loo.split(X):
-#     X_train, X_test = X[train_index], X[test_index]
-#     y_train, y_test = label[train_index], label[test_index]
+    clf = GaussianNB()
+    clf.fit(X_train, y_train)
+    prediction = clf.predict(X_test)
+    score = 1 if (prediction == y_test) else 0
+    # TODO-- Convert to ROC Curve sklearn.metrics.roc_curve 
+    CF_Matrix = sklearn.metrics.confusion_matrix(y_test, prediction)
 
-#     neigh = KNeighborsClassifier(n_neighbors=12)
-#     neigh.fit(X_train, y_train)
-#     prediction = neigh.predict(X_test)
-#     score += sklearn.metrics.zero_one_loss(y_test, prediction)
-# score /= 750
-# print(score)
+    return (score, CF_Matrix)
+
+    # -- Refactor
+    # for i in range(len(CF_Matrix)):
+    #     for j in range(len(CF_Matrix[i])):
+    #         matrix_total[i][j] = matrix_total[i][j] + CF_Matrix[i][j]
+    # print("True Negative Rate: {}".format(matrix_total[0][0]/(matrix_total[0][0] + matrix_total[1][0])))
 
 
 
-# print("\n\nSVC")
-# # TODO-- Test with kernel linear, poly-3, poly-5
-# loo.get_n_splits(X)
-# score = 0
-# for train_index, test_index in loo.split(X):
-#     X_train, X_test = X[train_index], X[test_index]
-#     y_train, y_test = label[train_index], label[test_index]
-#     clf = SVC(kernel='poly', degree=5)
-#     clf.fit(X_train, y_train)
-#     prediction = clf.predict(X_test)
-#     score += sklearn.metrics.zero_one_loss(y_test, prediction)
-# score /= 750
-# print(score)
+def knn(X_train, y_train, X_test, y_test):
+    ''' Runs K-Nearest Neighbors
+    Input: X, y, test_size
+    Return: Dict of {n:score}
+    '''
 
-# TODO-- Re-format everything to use train_test_split rather than LOOCV
-# TODO-- Fix following KMeans
-loo.get_n_splits(X)
-score = 0
-for train_index, test_index in loo.split(X):
-    X_train, X_test = X[train_index], X[test_index]
-    y_train, y_test = label[train_index], label[test_index]
-    kmeans = KMeans(n_clusters=2, random_state=None)
-    kmeans.fit(X_train)
-    print(kmeans.labels_)
-    prediction = kmeans.predict(X_test)
-    score += sklearn.metrics.zero_one_loss(y_test, prediction)
-score /= 750
-print(score)
+    results = dict()
+    for neighbs in range(5, math.ceil(math.sqrt(num_samples))):
+        clf = KNeighborsClassifier(n_neighbors=neighbs)
+        clf.fit(X_train, y_train)
+        prediction = clf.predict(X_test)
+        score = sklearn.metrics.zero_one_loss(y_test, prediction)
+        results[neighbs] = score
 
+    return results
+
+
+def svm(X_train, y_train, X_test, y_test):
+    ''' Runs Suport Vector Classification
+    Input: X, y, test_size
+    Return: all_results=(kernel_name[& degree], result)
+    '''
+
+    all_kernels, all_results = [], []
+    all_kernels.append(('linear', SVC(kernel='linear')))
+    all_kernels.append(('poly-d3', SVC(kernel='poly',degree=3)))
+    all_kernels.append(('poly-d5', SVC(kernel='poly',degree=5)))
+    
+    for name, clf in all_kernels:
+        clf.fit(X_train, y_train)
+        prediction = clf.predict(X_test)
+        zero_one = sklearn.metrics.zero_one_loss(y_test, prediction)
+        all_results.append((name, zero_one))
+
+    return all_results
+
+
+# TODO-- Fix KMeans
+def kmeans(X_train, y_train, X_test, y_test):
+    ''' Runs K-Means Clustering
+    Input: X, y, test_size
+    Return: result
+    '''
+
+    clf = KMeans(n_clusters=num_classes, random_state=None)
+    clf.fit(X_train)
+    prediction = clf.predict(X_test)
+    result = sklearn.metrics.zero_one_loss(y_test, prediction)
+
+    return result
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+        ##              Experiment               ##
+        # num_features = num_features - 1
+
+        # # Group by stock symbol so we can impute
+        # # Remove stock symbol
+        # # Impute so we don't have NaN
+        # all_subsets = []
+        # imp = sklearn.preprocessing.Imputer(missing_values="NaN", strategy="mean", axis=0)
+        # for curr_sym in stock_symbols:
+        #     data_subset = list(filter(lambda x: x[0] == curr_sym, data))
+        #     data_subset = np.array(list(map(lambda x: x[1:], data_subset)))
+        #     data_subset = imp.fit_transform(data_subset)
+        #     # all_subsets.append(data_subset)
+        #     for subset in data_subset:
+        #         all_subsets.append(subset)
+
+        # X = np.array([all_subsets[0]])
+        # for i, subset in enumerate(all_subsets):
+        #     if i == 0:
+        #         continue
+        #     X = np.append(X, [subset], axis=0)
+        # # print(X)
+        ##                                          ##
