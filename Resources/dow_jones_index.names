@@ -109,11 +109,11 @@ There are 16 attributes.
 	high: the highest price of the stock during the week
 	low: the lowest price of the stock during the week
 	close: the price of the stock at the end of the week
-	volume: the number of shares of stock that traded hands in the week
+7	volume: the number of shares of stock that traded hands in the week
 	percent_change_price: the percentage change in price throughout the week
 	percent_chagne_volume_over_last_wek: the percentage change in the number of shares of 
 		stock that traded hands for this week compared to the previous week
-	previous_weeks_volume: the number of shares of stock that traded hands in the previous week
+10	previous_weeks_volume: the number of shares of stock that traded hands in the previous week
 
 	# Toss?  Might be useful?
 	next_weeks_open: the opening price of the stock in the following week
