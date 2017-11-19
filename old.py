@@ -1,4 +1,4 @@
-from sklearn.model_selection import train_test_split, LeaveOneOut
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.cluster import KMeans
@@ -19,53 +19,53 @@ def main():
 
     gnb_score, knn_score, svc_lscore, svc_p3score, svc_p5score, kmeans_score = 0, 0, 0, 0, 0, 0
     # Default: 1,  I made this variable and following loop for testing purposes to see averages
+    num_tests = 100
 
-    knn_results = dict()
     X, y = preprocess()
-    print('Number of "usable" samples: {}'.format(NUM_SAMPLES)) 
-    # --When testing with LOOCV--
-    # loo = LeaveOneOut()
-    # for train_index, test_index in loo.split(X):
-    #     X_train, X_test = X[train_index], X[test_index]
-    #     y_train, y_test = y[train_index], y[test_index]
-    num_tests = 1000
+    # knn_scores = []
+    knn_results = dict()
+
     for i in range(num_tests):
         X_train, X_test, y_train, y_test = \
             train_test_split(X, y, test_size=T_SIZE)
+        # print("\nGaussian Naive Bayes")
         gnb_score += gnb(X_train, y_train, X_test, y_test)
+        # print("\nK-Nearest Neighbors")
         knn_scores = knn(X_train, y_train, X_test, y_test)
         for i in knn_scores:
             if i[0] in knn_results:
                 knn_results[i[0]] += i[1]
             else:
                 knn_results[i[0]] = i[1]
-        svc_temp = svm(X_train, y_train, X_test, y_test)
-        svc_lscore += svc_temp[0][1]
-        svc_p3score += svc_temp[1][1]
-        svc_p5score += svc_temp[2][1]
-        kmeans_score += kmeans(X_train, y_train, X_test, y_test)
 
-
-    # On average, I was seeing 53% accuracy
+        # print("\nSupport Vector Machines")
+        # svc_temp = svm(X_train, y_train, X_test, y_test)
+        # svc_lscore += svc_temp[0][1]
+        # svc_p3score += svc_temp[1][1]
+        # svc_p5score += svc_temp[2][1]
+        # print("\nK-Means")
+        # kmeans_score += kmeans(X_train, y_train, X_test, y_test)
+    
+    # On average, I was seeing 38~58% accuracy
     print("\nGaussian Naive Bayes")
     print(gnb_score/num_tests)
-    # TODO -- Graph ROC again
 
-    # On average, I was seeing 49~50% accuracy
-    # N = 6 consistantly gave the highest performance of 51%
+    # On average, I was seeing 59~72% accuracy
     print("\nK-Nearest Neighbors")
+
     knn_scores = []
     for neighbs, result in knn_results.items():
         knn_scores.append((neighbs, result))
+
     for result in sorted(knn_scores):
         print(result[0],' : ',result[1]/num_tests)
 
+
     # KNN Vs. GNB?
-    # For this data, Gaussian NB outperforms KNN with a 4 percent difference
 
     # For this data, it seems that linear vs poly3 vs poly 5 slight difference
     # Polys tended to do better than linear
-    # On average, I was seeing ~55% accuracy
+    # On average, I was seeing 47~58% accuracy
     print("\nSupport Vector Machine Linear")
     print(svc_lscore/num_tests)
     print("\nSupport Vector Machine Poly 3")
@@ -83,7 +83,7 @@ def main():
     # Not sure how to interpret the KMeans labels against original labels.
     # However my 'accuracy' function consistantly gave an approx 50%
 
-    # Overall for this data set, 
+    # Overall for this data set, KNN tended to consistantly perform the best
 
 
 def preprocess():
@@ -212,6 +212,14 @@ def knn(X_train, y_train, X_test, y_test):
         results.append((neighbs, score))
     return results
 
+    # top_score, best_n = 0, 0
+    # for n, scr in results:
+    #     if scr > top_score:
+    #         best_n = n
+    #         top_score = scr
+
+    # return (best_n, top_score)
+
 
 def svm(X_train, y_train, X_test, y_test):
     ''' Runs Suport Vector Classification
@@ -255,3 +263,39 @@ def kmeans(X_train, y_train, X_test, y_test):
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
+        ##              Experiment               ##
+        # num_features = num_features - 1
+
+        # # Group by stock symbol so we can impute
+        # # Remove stock symbol
+        # # Impute so we don't have NaN
+        # all_subsets = []
+        # imp = sklearn.preprocessing.Imputer(missing_values="NaN", strategy="mean", axis=0)
+        # for curr_sym in stock_symbols:
+        #     data_subset = list(filter(lambda x: x[0] == curr_sym, data))
+        #     data_subset = np.array(list(map(lambda x: x[1:], data_subset)))
+        #     data_subset = imp.fit_transform(data_subset)
+        #     # all_subsets.append(data_subset)
+        #     for subset in data_subset:
+        #         all_subsets.append(subset)
+
+        # X = np.array([all_subsets[0]])
+        # for i, subset in enumerate(all_subsets):
+        #     if i == 0:
+        #         continue
+        #     X = np.append(X, [subset], axis=0)
+        # # print(X)
+        ##                                          ##
+
+
+
+    # -- Refactor
+    # for i in range(len(CF_Matrix)):
+    #     for j in range(len(CF_Matrix[i])):
+    #         matrix_total[i][j] = matrix_total[i][j] + CF_Matrix[i][j]
+    # print("True Negative Rate: {}".format(matrix_total[0][0]/(matrix_total[0][0] + matrix_total[1][0])))
